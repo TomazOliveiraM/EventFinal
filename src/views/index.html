@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Eventos</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Estilos específicos para a página inicial */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .header-nav a, .header-nav button {
+      margin-left: 15px;
+      text-decoration: none;
+      color: #fda085;
+      font-weight: 600;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+    }
+    .header-nav a:hover, .header-nav button:hover {
+      text-decoration: underline;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width: 800px;">
+    <div class="form-container">
+      <div class="header">
+        <h2 id="welcome-message">Bem-vindo ao Sistema de Eventos</h2>
+        <nav class="header-nav">
+          <span id="guest-links">
+            <a href="/login.html">Login</a>
+            <a href="/register.html">Cadastro</a>
+          </span>
+          <span id="user-links" class="hidden">
+            <!-- Adicionar links para painéis aqui se necessário -->
+            <button id="logout-btn">Sair</button>
+          </span>
+        </nav>
+      </div>
+
+      <div id="event-creation-form" class="hidden">
+        <h3>Criar Novo Evento</h3>
+        <form id="formEvento">
+          <!-- Formulário de evento permanece o mesmo -->
+          <input type="text" name="titulo" placeholder="Título do Evento" required>
+          <textarea name="descricao" placeholder="Descrição do Evento" required></textarea>
+          <input type="text" name="categoria" placeholder="Categoria" required>
+          <input type="date" name="data" required>
+          <input type="text" name="local" placeholder="Local" required>
+          <select name="tipo" required>
+            <option value="online">Online</option>
+            <option value="presencial">Presencial</option>
+          </select>
+          <button type="submit">Criar Evento</button>
+        </form>
+      </div>
+
+      <div id="event-list">
+        <h3>Próximos Eventos</h3>
+        <ul id="eventos"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      const guestLinks = document.getElementById('guest-links');
+      const userLinks = document.getElementById('user-links');
+      const eventCreationForm = document.getElementById('event-creation-form');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      if (token) {
+        guestLinks.classList.add('hidden');
+        userLinks.classList.remove('hidden');
+        eventCreationForm.classList.remove('hidden');
+      } else {
+        guestLinks.classList.remove('hidden');
+        userLinks.classList.add('hidden');
+        eventCreationForm.classList.add('hidden');
+      }
+
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.reload();
+      });
+
+      // Aqui você pode adicionar a lógica para carregar os eventos na lista #eventos
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h2>Bem-vindo de volta!</h2>
+      <p>Faça login para continuar.</p>
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="input-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" required>
+        </div>
+        <button type="submit">Entrar</button>
+      </form>
+      <div id="message"></div>
+      <div class="form-link">
+        <p>Não tem uma conta? <a href="/register.html">Cadastre-se</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageDiv.innerHTML = '';
+
+      const res = await fetch('/api/users/login', { // ROTA CORRIGIDA
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: form.email.value,
+          senha: form.senha.value
+        })
+      });
+      const json = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('token', json.token);
+
+        const payloadBase64 = json.token.split('.')[1];
+        const payload = JSON.parse(atob(payloadBase64));
+        const tipo = payload.tipo;
+
+        // Redireciona para a página inicial, que irá tratar o painel
+        window.location.href = '/';
+      } else {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = json.error || 'Erro ao fazer login.';
+      }
+    });
+  </script>
+</body>
+</html>

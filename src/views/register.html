@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <h2>Crie sua Conta</h2>
+      <p>Preencha os campos para se registrar.</p>
+      <form id="registerForm">
+        <div class="input-group">
+          <label for="nome">Nome Completo</label>
+          <input type="text" id="nome" name="nome" required>
+        </div>
+        <div class="input-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="input-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" required minlength="6">
+        </div>
+        <div class="input-group">
+          <label for="confirmSenha">Confirmar Senha</label>
+          <input type="password" id="confirmSenha" name="confirmSenha" required minlength="6">
+        </div>
+        <div class="input-group">
+          <label for="tipo">Tipo de Usuário</label>
+          <select id="tipo" name="tipo" required>
+            <option value="participante">Participante</option>
+            <option value="organizador">Organizador</option>
+          </select>
+        </div>
+        <button type="submit">Registrar</button>
+      </form>
+      <div id="message"></div>
+      <div class="form-link">
+        <p>Já tem uma conta? <a href="/login.html">Faça login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageDiv.innerHTML = '';
+
+      if (form.senha.value !== form.confirmSenha.value) {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = 'As senhas não coincidem!';
+        return;
+      }
+
+      const data = {
+        nome: form.nome.value,
+        email: form.email.value,
+        senha: form.senha.value,
+        tipo: form.tipo.value,
+      };
+
+      const res = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+
+      if (res.ok) {
+        messageDiv.className = 'message success';
+        messageDiv.textContent = json.message + ' Redirecionando para o login...';
+        setTimeout(() => {
+          window.location.href = '/login.html';
+        }, 2000);
+      } else {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = json.error || 'Ocorreu um erro ao registrar.';
+      }
+    });
+  </script>
+</body>
+</html>

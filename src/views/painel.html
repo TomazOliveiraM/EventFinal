@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel do Usuário</title>
+</head>
+<body>
+  <h2>Painel do Usuário</h2>
+  <div id="info"></div>
+  <button id="logoutBtn">Logout</button>
+
+  <script>
+    // Pega o token armazenado no localStorage
+    const token = localStorage.getItem('token');
+    const infoDiv = document.getElementById('info');
+
+    if (!token) {
+      infoDiv.innerHTML = '<p>Você não está logado. <a href="login.html">Faça login</a></p>';
+    } else {
+      // Decodifica o token para pegar dados do usuário (tipo e id)
+      // Como não temos biblioteca JWT aqui, vamos só mostrar token e sugerir backend para dados reais
+
+      infoDiv.innerHTML = `
+        <p>Token JWT: <code>${token}</code></p>
+        <p>Aqui você pode implementar chamadas à API para listar eventos, inscrições, etc.</p>
+      `;
+    }
+
+    // Logout simples
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>

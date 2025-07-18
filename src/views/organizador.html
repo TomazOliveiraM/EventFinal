@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Organizador</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Estilos adicionais para o painel */
+    .event-list-item {
+      background-color: #f9f9f9;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border-left: 4px solid #f6d365;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width: 800px;">
+    <div class="form-container">
+      <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Painel do Organizador</h2>
+        <button id="logoutBtn" style="width: auto; padding: 8px 16px; margin-top: 0;">Sair</button>
+      </div>
+
+      <h3>Seus Eventos</h3>
+      <ul id="listaEventos" style="list-style: none; padding: 0; margin-bottom: 30px;">
+        <!-- Eventos serão carregados aqui -->
+      </ul>
+
+      <h3>Criar Novo Evento</h3>
+      <form id="eventoForm">
+        <div class="input-group">
+          <input type="text" name="titulo" placeholder="Título do Evento" required>
+        </div>
+        <div class="input-group">
+          <textarea name="descricao" placeholder="Descrição do Evento" required></textarea>
+        </div>
+        <div class="input-group">
+          <input type="text" name="categoria" placeholder="Categoria" required>
+        </div>
+        <div class="input-group">
+          <label for="data">Data do Evento</label>
+          <input type="date" id="data" name="data" required>
+        </div>
+        <div class="input-group">
+          <input type="text" name="local" placeholder="Local" required>
+        </div>
+        <div class="input-group">
+          <select name="tipo" required>
+            <option value="" disabled selected>Selecione o tipo</option>
+            <option value="online">Online</option>
+            <option value="presencial">Presencial</option>
+          </select>
+        </div>
+        <button type="submit">Criar Evento</button>
+      </form>
+      <div id="message" class="message"></div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const listaEventos = document.getElementById('listaEventos');
+    const messageDiv = document.getElementById('message');
+
+    if (!token) {
+      alert('Você precisa estar logado!');
+      window.location.href = 'login.html';
+    }
+
+    // Carrega eventos do organizador
+    // OBS: A rota /api/events lista TODOS os eventos. O ideal seria ter uma rota
+    // /api/users/me/events para pegar apenas os do organizador logado.
+    // Por enquanto, vamos filtrar no frontend.
+    async function carregarEventos() {
+      // Decodifica o ID do usuário do token para filtrar
+      const payloadBase64 = token.split('.')[1];
+      const payload = JSON.parse(atob(payloadBase64));
+      const organizadorId = payload.id;
+
+      const res = await fetch('/api/events', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const eventos = await res.json();
+      listaEventos.innerHTML = '';
+
+      const meusEventos = eventos.filter(ev => ev.organizador_id === organizadorId);
+
+      if (meusEventos.length === 0) {
+        listaEventos.innerHTML = '<li>Você ainda não criou nenhum evento.</li>';
+      } else {
+        meusEventos.forEach(ev => {
+          const li = document.createElement('li');
+          li.className = 'event-list-item';
+          li.textContent = `${ev.titulo} - ${new Date(ev.data).toLocaleDateString()} (${ev.tipo})`;
+          listaEventos.appendChild(li);
+        });
+      }
+    }
+
+    carregarEventos();
+
+    // Formulário de criação
+    const form = document.getElementById('eventoForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageDiv.textContent = '';
+
+      const data = {
+        titulo: form.titulo.value,
+        descricao: form.descricao.value,
+        categoria: form.categoria.value,
+        data: form.data.value,
+        local: form.local.value,
+        tipo: form.tipo.value
+      };
+
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        messageDiv.className = 'message success';
+        messageDiv.textContent = json.message || 'Evento criado com sucesso!';
+        form.reset();
+        carregarEventos(); // Atualiza a lista
+      } else {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = json.error || 'Ocorreu um erro.';
+      }
+    });
+
+    // Botão de logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+  </script>
+</body>
+</html>
