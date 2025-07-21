@@ -5,6 +5,9 @@ const { body } = require('express-validator');
 // Importa o controller com as funções de cadastro, login etc.
 const userController = require('../controllers/userController');
 
+// Importa os middlewares de autenticação e autorização
+const { verificarToken, autorizar } = require('../middlewares/auth');
+
 // Rota para registrar novo usuário
 router.post(
   '/register',
@@ -19,6 +22,12 @@ router.post(
 
 // Rota para login de usuário
 router.post('/login', userController.login);
+
+// Rota para listar todos os usuários (somente admin)
+router.get('/', verificarToken, autorizar('admin'), userController.listAll);
+
+// Rota para deletar um usuário (somente admin)
+router.delete('/:id', verificarToken, autorizar('admin'), userController.deleteUser);
 
 // Exporta as rotas para usar no app principal
 module.exports = router;

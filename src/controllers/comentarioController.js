@@ -1,7 +1,14 @@
 const Comentario = require('../models/comentarioModel');
+const { validationResult } = require('express-validator');
 
 exports.create = async (req, res) => {
     try {
+        // Verifica se houve erros de validação definidos na rota
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
         const data = {
             ...req.body,
             usuario_id: req.usuario.id // ID do usuário logado (vem do token)

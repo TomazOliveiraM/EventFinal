@@ -1,53 +1,67 @@
 const Inscricao = require('../models/inscricaoModel');
 const Event = require('../models/eventModel');
 
-// Criar uma nova inscrição no evento
-exports.create = async (req, res) => {
+exports.inscrever = async (req, res) => {
   try {
     const { evento_id } = req.body;
-    const usuario_id = req.usuario.id;
-    await Inscricao.create({ usuario_id, evento_id });
-    res.status(201).json({ message: 'Inscrição realizada com sucesso' });
-  } catch (err) {
-    // Trata erro de inscrição duplicada
-    if (err.code === 'ER_DUP_ENTRY') {
+    const participante_id = req.usuario.id; // Do token JWT
+
+    // 1. Verificar se o evento existe
+    const evento = await Event.findById(evento_id);
+    if (!evento) {
+      return res.status(404).json({ error: 'Evento não encontrado.' });
+    }
+
+    // 2. Verificar se o usuário já está inscrito
+    const inscricaoExistente = await Inscricao.findByUserAndEvent(participante_id, evento_id);
+    if (inscricaoExistente) {
       return res.status(409).json({ error: 'Você já está inscrito neste evento.' });
     }
-    res.status(500).json({ error: 'Erro ao se inscrever no evento', details: err.message });
-  }
-};
 
-// Listar todas as inscrições do usuário logado
-exports.listByUsuario = async (req, res) => {
-  try {
-    const usuario_id = req.usuario.id;
-    const eventos = await Inscricao.findByUser(usuario_id);
-    res.json(eventos);
+    // 3. Criar a inscrição
+    const novaInscricao = await Inscricao.create({ evento_id, participante_id });
+    res.status(201).json({ message: 'Inscrição realizada com sucesso!', inscricao: { id: novaInscricao.id, evento_id, participante_id } });
+
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao listar inscrições', details: err.message });
+    res.status(500).json({ error: 'Erro ao realizar inscrição', details: err.message });
   }
 };
 
-// Cancelar inscrição de um usuário em um evento
-exports.cancel = async (req, res) => {
+exports.cancelar = async (req, res) => {
   try {
-    const { evento_id } = req.body;
-    const usuario_id = req.usuario.id;
-    await Inscricao.delete({ usuario_id, evento_id });
-    res.json({ message: 'Inscrição cancelada com sucesso' });
+    const { id } = req.params; // ID da inscrição
+    const participante_id = req.usuario.id;
+
+    const result = await Inscricao.delete(id, participante_id);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Inscrição não encontrada ou você não tem permissão para cancelá-la.' });
+    }
+
+    res.json({ message: 'Inscrição cancelada com sucesso.' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao cancelar inscrição', details: err.message });
   }
 };
 
-// [PAINEL DO ORGANIZADOR] - Listar usuários inscritos em um evento específico
+exports.listByUsuario = async (req, res) => {
+  try {
+    const participante_id = req.usuario.id;
+    const inscricoes = await Inscricao.findByUser(participante_id);
+    res.json(inscricoes);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao listar inscrições do usuário', details: err.message });
+  }
+};
+
 exports.listByEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
     const evento = await Event.findById(eventId);
 
-    // Verifica se o evento existe e se o usuário logado é o organizador ou um admin
-    if (!evento) return res.status(404).json({ error: 'Evento não encontrado.' });
+    if (!evento) {
+      return res.status(404).json({ error: 'Evento não encontrado.' });
+    }
+
     if (req.usuario.tipo !== 'admin' && evento.organizador_id !== req.usuario.id) {
       return res.status(403).json({ error: 'Acesso negado. Você não é o organizador deste evento.' });
     }
@@ -55,6 +69,6 @@ exports.listByEvent = async (req, res) => {
     const inscritos = await Inscricao.findByEvent(eventId);
     res.json(inscritos);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao listar inscritos no evento.', details: err.message });
+    res.status(500).json({ error: 'Erro ao listar inscritos do evento', details: err.message });
   }
 };

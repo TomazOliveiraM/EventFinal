@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../app'); // Importa o app Express
+const app = require('../app.js'); // Importa o app Express
 const connection = require('../database'); // Importa a conexão para fechar no final
 
 // Hook para fechar a conexão com o banco após todos os testes do arquivo
