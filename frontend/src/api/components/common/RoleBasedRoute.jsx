@@ -1,22 +1,18 @@
+// src/components/common/RoleBasedRoute.jsx
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import PrivateRoute from './PrivateRoute';
+import useAuth from '../../../hooks/useAuth';
 
-const RoleBasedRoute = ({ children, allowedRoles }) => {
-  const { user } = useAuth();
+const RoleBasedRoute = ({ allowedRoles, children }) => {
+  const { user, loading } = useAuth();
 
-  // Primeiro, garante que o usuário está autenticado
-  // Depois, verifica se a permissão dele está na lista de permissões permitidas
-  const isAuthorized = user && allowedRoles.includes(user.role);
+  if (loading) return <div>Carregando...</div>; // ou um spinner
 
-  if (!isAuthorized) {
-    // Pode redirecionar para uma página "Não Autorizado" ou para a home
-    return <Navigate to="/" replace />;
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" />;
   }
 
   return children;
 };
 
 export default RoleBasedRoute;
-

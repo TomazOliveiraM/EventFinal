@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';  // Corrigido aqui
 
 import Navbar from './components/layout/Navbar';
 import HomePage from './pages/public/HomePage';
@@ -10,10 +10,12 @@ import OrganizerDashboard from './pages/private/OrganizerDashboard';
 import RegisterPage from './pages/public/RegisterPage';
 import EventDetailPage from './pages/public/EventDetailPage';
 import CreateEventPage from './pages/private/CreateEventPage';
-import AdminDashboard from './pages/private/AdminDashboard'; // Importar o Admin Dashboard
-import EditEventPage from './pages/private/EditEventPage'; // Importar a página de edição
+import AdminDashboard from './pages/private/AdminDashboard';
+import EditEventPage from './pages/private/EditEventPage';
+import NotFoundPage from './pages/public/NotFoundPage';
+
 import PrivateRoute from './components/common/PrivateRoute';
-import RoleBasedRoute from './components/common/RoleBasedRoute'; // Importar o RoleBasedRoute
+import RoleBasedRoute from './components/common/RoleBasedRoute';
 
 function App() {
   return (
@@ -28,9 +30,7 @@ function App() {
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventDetailPage />} />
 
-          {/* --- Rotas Privadas --- */}
-
-          {/* Rota para o Painel do Organizador */}
+          {/* Rotas Privadas */}
           <Route
             path="/organizer/dashboard"
             element={
@@ -42,21 +42,39 @@ function App() {
             }
           />
 
-          {/* Rota para Criar Evento (Organizador) */}
-          <Route path="/events/create" element={<PrivateRoute><RoleBasedRoute allowedRoles={['organizador']}><CreateEventPage /></RoleBasedRoute></PrivateRoute>} />
-
-          {/* Rota para Editar Evento (Organizador ou Admin) */}
-          <Route path="/events/:id/edit" element={<PrivateRoute><RoleBasedRoute allowedRoles={['organizador', 'admin']}><EditEventPage /></RoleBasedRoute></PrivateRoute>} />
-
-          {/* Rota para o Painel de Administração */}
           <Route
-            path="/admin"
+            path="/events/create"
             element={
-              <PrivateRoute><RoleBasedRoute allowedRoles={['admin']}><AdminDashboard /></RoleBasedRoute></PrivateRoute>
+              <PrivateRoute>
+                <RoleBasedRoute allowedRoles={['organizador']}>
+                  <CreateEventPage />
+                </RoleBasedRoute>
+              </PrivateRoute>
             }
           />
 
-          {/* Rota para páginas não encontradas */}
+          <Route
+            path="/events/:id/edit"
+            element={
+              <PrivateRoute>
+                <RoleBasedRoute allowedRoles={['organizador', 'admin']}>
+                  <EditEventPage />
+                </RoleBasedRoute>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute>
+                <RoleBasedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </RoleBasedRoute>
+              </PrivateRoute>
+            }
+          />
+
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Router>
